@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>543297399935-p6uok0eef2r2nefrhsolqbuchsp9ancs.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.543297399935-p6uok0eef2r2nefrhsolqbuchsp9ancs</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>543297399935-iq1usbkk96s5qce6ba1584p3nqtqu6ti.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCdTjl9VCsnos9-PQxIe2Kbf_KgqFiGNgQ</string>
+	<key>GCM_SENDER_ID</key>
+	<string>543297399935</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.aifun.dateideas.planadate</string>
+	<key>PROJECT_ID</key>
+	<string>soulplan-dateplanner</string>
+	<key>STORAGE_BUCKET</key>
+	<string>soulplan-dateplanner.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:543297399935:ios:74642b18481e4fa55da34a</string>
+	<key>DATABASE_URL</key>
+	<string>https://soulplan-dateplanner-default-rtdb.firebaseio.com</string>
+</dict>
+</plist>

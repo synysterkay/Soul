@@ -52,7 +52,6 @@ android/**/._*
 AuthKey_*.p8
 SubscriptionKey_*.p8
 google-services.json
-GoogleService-Info.plist
 
 # Firebase
 firebase-debug.log
