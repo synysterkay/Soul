@@ -5,6 +5,27 @@ workflows:
     instance_type: mac_mini_m2
     integrations:
       app_store_connect: codemagic
+    triggering:
+      events:
+        - push
+        - tag
+        - pull_request
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+          source: true
+        - pattern: 'develop'
+          include: true
+          source: true
+        - pattern: 'release/*'
+          include: true
+          source: true
+      tag_patterns:
+        - pattern: 'v*.*.*'
+          include: true
+        - pattern: 'ios-v*'
+          include: true
+      cancel_previous_builds: true
     environment:
       ios_signing:
         distribution_type: app_store
@@ -16,6 +37,16 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
+      - name: Set up environment files
+        script: |
+          echo "Setting up secure files..."
+          # Copy .env file if exists
+          if [ -f "$CM_BUILD_DIR/.env" ]; then
+            echo ".env file found"
+          else
+            echo "DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY" > .env
+            echo "FOURSQUARE_API_KEY=$FOURSQUARE_API_KEY" >> .env
+          fi
       - name: Set up keychain
         script: |
           keychain initialize
@@ -27,10 +58,19 @@ workflows:
           xcode-project use-profiles
       - name: Get Flutter packages
         script: |
-          flutter packages pub get
-      - name: Install pods
+          flutter --version
+          flutter pub get
+          flutter pub upgrade
+      - name: Install CocoaPods dependencies
         script: |
-          find . -name "Podfile" -execdir pod install \;
+          cd ios
+          pod --version
+          pod repo update
+          pod install --repo-update
+          cd ..
+      - name: Flutter analyze
+        script: |
+          flutter analyze --no-fatal-infos
       - name: Flutter build ipa
         script: |
           flutter build ipa --release \
@@ -43,7 +83,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com
+          - anaskay.13@gmail.com
         notify:
           success: true
           failure: true
@@ -57,7 +97,28 @@ workflows:
   android-workflow:
     name: Android Workflow
     max_build_duration: 120
-    instance_type: mac_mini_m2
+    instance_type: linux_x2
+    triggering:
+      events:
+        - push
+        - tag
+        - pull_request
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+          source: true
+        - pattern: 'develop'
+          include: true
+          source: true
+        - pattern: 'release/*'
+          include: true
+          source: true
+      tag_patterns:
+        - pattern: 'v*.*.*'
+          include: true
+        - pattern: 'android-v*'
+          include: true
+      cancel_previous_builds: true
     environment:
       android_signing:
         - keystore_reference
@@ -69,13 +130,36 @@ workflows:
       xcode: latest
       cocoapods: default
     scripts:
+      - name: Set up environment files
+        script: |
+          echo "Setting up secure files..."
+          # Copy google-services.json if provided
+          if [ ! -f "$CM_BUILD_DIR/android/app/google-services.json" ]; then
+            echo "Warning: google-services.json not found"
+          fi
+          # Create .env file
+          if [ -f "$CM_BUILD_DIR/.env" ]; then
+            echo ".env file found"
+          else
+            echo "DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY" > .env
+            echo "FOURSQUARE_API_KEY=$FOURSQUARE_API_KEY" >> .env
+          fi
       - name: Set up local.properties
         script: |
           echo "flutter.sdk=$HOME/programs/flutter" > "$CM_BUILD_DIR/android/local.properties"
       - name: Get Flutter packages
         script: |
-          flutter packages pub get
-      - name: Flutter build AAB
+          flutter --version
+          flutter pub get
+          flutter pub upgrade
+      - name: Flutter analyze
+        script: |
+          flutter analyze --no-fatal-infos
+      - name: Build Android APK
+        script: |
+          flutter build apk --release \
+            --build-name=1.0.$BUILD_NUMBER
+      - name: Build Android App Bundle
         script: |
           flutter build appbundle --release \
             --build-name=1.0.$BUILD_NUMBER
@@ -86,7 +170,7 @@ workflows:
     publishing:
       email:
         recipients:
-          - your-email@example.com
+          - anaskay.13@gmail.com
         notify:
           success: true
           failure: true
