@@ -76,21 +76,27 @@ class DateIdeaService {
   };
 
   static List<String> categorizeDateIdea(String dateIdea) {
-    if (dateIdea.startsWith('dateIdea_')) {
-      return categoryMapping[dateIdea] ?? ['other'];
-    }
-
-    final lowerCaseDateIdea = dateIdea.toLowerCase();
-    List<String> matchedCategories = [];
-
-    for (var entry in dateCategories.entries) {
-      if (entry.value.any((keyword) => lowerCaseDateIdea.contains(keyword))) {
-        matchedCategories.add(entry.key);
+    try {
+      if (dateIdea.startsWith('dateIdea_')) {
+        return categoryMapping[dateIdea] ?? ['other'];
       }
-    }
 
-    return matchedCategories.isEmpty ? ['other'] : matchedCategories;
+      final lowerCaseDateIdea = dateIdea.toLowerCase();
+      List<String> matchedCategories = [];
+
+      for (var entry in dateCategories.entries) {
+        if (entry.value.any((keyword) => lowerCaseDateIdea.contains(keyword))) {
+          matchedCategories.add(entry.key);
+        }
+      }
+
+      return matchedCategories.isEmpty ? ['other'] : matchedCategories;
+    } catch (e) {
+      print("Error categorizing date idea '$dateIdea': $e");
+      return ['other']; // Default fallback category
+    }
   }
+
   static List<String> getRelevantPlaceTypes(List<String> categories) {
     Set<String> placeTypes = {};
     for (String category in categories) {

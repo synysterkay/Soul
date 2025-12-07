@@ -1,225 +1,480 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:soul_plan/services/date_idea_service.dart';
 
 class PlacesService {
-  final String _apiKey = 'fsq3JhEN4LLgCWt+i6FKfBPchqf14i0c6TW0zoqCgSemof0=';
-  final String baseUrl = 'https://api.foursquare.com/v3/places';
+  // Using OpenStreetMap Nominatim API (free, no key required)
+  final String baseUrl = 'https://nominatim.openstreetmap.org';
+  final String userAgent =
+      'SoulPlan/1.0 (Date Planning App)'; // Required by OSM
 
-  String _getQueryFromDateIdea(String dateIdea) {
-    if (dateIdea.startsWith('dateIdea_')) {
-      final keywords = DateIdeaService.extractKeywords(dateIdea);
-      return keywords.take(3).join(' ');
+  /// Extract key venue types from date description with enhanced matching
+  List<String> _extractVenueTypes(String dateDescription) {
+    final keywords = <String>[];
+    final lower = dateDescription.toLowerCase();
+
+    // Restaurant/Food keywords (expanded for AI-generated dates)
+    if (lower.contains('restaurant') ||
+        lower.contains('dinner') ||
+        lower.contains('lunch') ||
+        lower.contains('brunch') ||
+        lower.contains('food') ||
+        lower.contains('cuisine') ||
+        lower.contains('meal') ||
+        lower.contains('dine') ||
+        lower.contains('eat') ||
+        lower.contains('dining') ||
+        lower.contains('chef') ||
+        lower.contains('tasting') ||
+        lower.contains('culinary') ||
+        lower.contains('bistro') ||
+        lower.contains('eatery')) {
+      keywords.add('restaurant');
     }
-    return dateIdea;
+
+    // Bar/Nightlife keywords (expanded)
+    if (lower.contains('bar') ||
+        lower.contains('cocktail') ||
+        lower.contains('drink') ||
+        lower.contains('nightlife') ||
+        lower.contains('pub') ||
+        lower.contains('wine') ||
+        lower.contains('brewery') ||
+        lower.contains('rooftop') ||
+        lower.contains('lounge') ||
+        lower.contains('speakeasy') ||
+        lower.contains('tavern')) {
+      keywords.add('bar');
+    }
+
+    // Entertainment keywords (expanded)
+    if (lower.contains('movie') ||
+        lower.contains('cinema') ||
+        lower.contains('film') ||
+        lower.contains('theater') ||
+        lower.contains('theatre') ||
+        lower.contains('show') ||
+        lower.contains('performance') ||
+        lower.contains('comedy') ||
+        lower.contains('live music') ||
+        lower.contains('concert')) {
+      keywords.add('cinema');
+    }
+
+    // Museum/Cultural keywords (expanded)
+    if (lower.contains('museum') ||
+        lower.contains('gallery') ||
+        lower.contains('art') ||
+        lower.contains('exhibition') ||
+        lower.contains('cultural') ||
+        lower.contains('historic') ||
+        lower.contains('monument') ||
+        lower.contains('heritage') ||
+        lower.contains('sculpture') ||
+        lower.contains('paintings')) {
+      keywords.add('museum');
+    }
+
+    // Outdoor/Nature keywords (expanded)
+    if (lower.contains('park') ||
+        lower.contains('garden') ||
+        lower.contains('outdoor') ||
+        lower.contains('nature') ||
+        lower.contains('scenic') ||
+        lower.contains('hike') ||
+        lower.contains('trail') ||
+        lower.contains('beach') ||
+        lower.contains('picnic') ||
+        lower.contains('sunset') ||
+        lower.contains('sunrise') ||
+        lower.contains('waterfront') ||
+        lower.contains('lake') ||
+        lower.contains('mountain') ||
+        lower.contains('forest') ||
+        lower.contains('botanical')) {
+      keywords.add('park');
+    }
+
+    // Activity/Sports keywords (expanded)
+    if (lower.contains('activity') ||
+        lower.contains('sport') ||
+        lower.contains('bowling') ||
+        lower.contains('arcade') ||
+        lower.contains('game') ||
+        lower.contains('climbing') ||
+        lower.contains('golf') ||
+        lower.contains('tennis') ||
+        lower.contains('skating') ||
+        lower.contains('bike') ||
+        lower.contains('cycle') ||
+        lower.contains('kayak') ||
+        lower.contains('adventure')) {
+      keywords.add('sports centre');
+    }
+
+    // Spa/Wellness keywords (expanded)
+    if (lower.contains('spa') ||
+        lower.contains('wellness') ||
+        lower.contains('massage') ||
+        lower.contains('yoga') ||
+        lower.contains('relax') ||
+        lower.contains('meditation') ||
+        lower.contains('sauna') ||
+        lower.contains('hot spring') ||
+        lower.contains('retreat')) {
+      keywords.add('spa');
+    }
+
+    // Coffee/Cafe keywords (expanded)
+    if (lower.contains('coffee') ||
+        lower.contains('cafe') ||
+        lower.contains('café') ||
+        lower.contains('tea') ||
+        lower.contains('espresso') ||
+        lower.contains('cappuccino') ||
+        lower.contains('latte') ||
+        lower.contains('bakery') ||
+        lower.contains('pastry')) {
+      keywords.add('cafe');
+    }
+
+    // Shopping keywords (new)
+    if (lower.contains('shop') ||
+        lower.contains('store') ||
+        lower.contains('market') ||
+        lower.contains('boutique') ||
+        lower.contains('mall') ||
+        lower.contains('vintage') ||
+        lower.contains('antique')) {
+      keywords.add('shop');
+    }
+
+    // Bookstore/Library keywords (new)
+    if (lower.contains('book') ||
+        lower.contains('library') ||
+        lower.contains('reading') ||
+        lower.contains('literary')) {
+      keywords.add('library');
+    }
+
+    return keywords;
   }
 
-  Future<List<Map<String, dynamic>>> getPlaces(String suggestion, String location, String price, String dateCategory) async {
-    String searchQuery = _getQueryFromDateIdea(suggestion);
-    bool isPriceSensitive = DateIdeaService.isPriceSensitiveActivity(searchQuery);
-    bool isFree = price == 'Free';
-    List<String> categories = DateIdeaService.categorizeDateIdea(searchQuery);
-    String priceParam = isFree ? '' : '&price=${price.length}';
+  Future<List<Map<String, dynamic>>> getPlaces(String suggestion,
+      String location, String price, String dateCategory) async {
+    print(
+        '🔍 Searching venues for: "$suggestion" in $location with budget: $price');
 
-    if (categories.contains("scenic_activity") || categories.contains("walking")) {
-      return _getSceniceOrWalkingPlaces(searchQuery, location, isFree);
-    }
+    // Extract venue types from date description
+    final venueTypes = _extractVenueTypes(suggestion);
+    print('📍 Detected venue types: $venueTypes');
 
-    String categoriesParam = _getCategoriesForSuggestion(searchQuery, isFree, dateCategory);
-    final url = Uri.parse('$baseUrl/search?query=${isFree ? "free " : ""}$searchQuery&near=$location&sort=RELEVANCE&limit=50$priceParam$categoriesParam');
+    // Collect all venues from different searches
+    final allVenues = <Map<String, dynamic>>[];
+    final seenIds = <String>{};
 
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': _apiKey,
-          'Accept': 'application/json',
-        },
-      );
+    // Search for each venue type
+    for (final venueType in venueTypes.isEmpty ? ['restaurant'] : venueTypes) {
+      try {
+        final venues = await _searchOSM(venueType, location);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final results = data['results'] as List<dynamic>;
-        return results.map((place) => _parsePlace(place, isFree, dateCategory)).where((place) => place != null).cast<Map<String, dynamic>>().toList();
-      } else {
-        throw Exception('Failed to load places: ${response.body}');
+        // Deduplicate results
+        for (final venue in venues) {
+          final id = venue['id'];
+          if (!seenIds.contains(id)) {
+            seenIds.add(id);
+            allVenues.add(venue);
+          }
+        }
+      } catch (e) {
+        print('⚠️ Error searching for $venueType: $e');
       }
-    } catch (e) {
-      print('Error in getPlaces: $e');
-      rethrow;
     }
-  }
-  Future<List<Map<String, dynamic>>> _getSceniceOrWalkingPlaces(String suggestion, String location, bool isFree) async {
-    final url = Uri.parse('$baseUrl/search?query=scenic spots&near=$location&sort=RELEVANCE&limit=50&categories=16000,26000');
 
-    try {
-      final response = await http.get(
-        url,
-        headers: {
-          'Authorization': _apiKey,
-          'Accept': 'application/json',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        final results = data['results'] as List<dynamic>;
-        return results.map((place) => _parseSceniceOrWalkingPlace(place, suggestion)).where((place) => place != null).cast<Map<String, dynamic>>().toList();
-      } else {
-        throw Exception('Failed to load scenic places: ${response.body}');
+    // If no results from keyword search, try broader search with title words
+    if (allVenues.isEmpty && venueTypes.isEmpty) {
+      final words = suggestion.split(' ').take(2).join(' ');
+      print('📝 Trying fallback search with: "$words"');
+      try {
+        final venues = await _searchOSM(words, location);
+        allVenues.addAll(venues);
+      } catch (e) {
+        print('⚠️ Fallback search failed: $e');
       }
-    } catch (e) {
-      print('Error in _getSceniceOrWalkingPlaces: $e');
-      rethrow;
+    }
+
+    // Score and sort venues by relevance
+    final scoredVenues = allVenues.map((venue) {
+      venue['score'] = _calculateRelevanceScore(
+        venue,
+        suggestion,
+        venueTypes,
+        dateCategory,
+      );
+      return venue;
+    }).toList();
+
+    // Sort by score (highest first)
+    scoredVenues
+        .sort((a, b) => (b['score'] as int).compareTo(a['score'] as int));
+
+    print('✅ Found ${scoredVenues.length} venues from OpenStreetMap');
+    return scoredVenues.take(20).toList();
+  }
+
+  /// Search OpenStreetMap for a specific venue type
+  Future<List<Map<String, dynamic>>> _searchOSM(
+      String query, String location) async {
+    // Build OSM search URL - combine query with location in free-form search
+    final searchQuery = '$query, $location';
+    final url = Uri.parse(
+        '$baseUrl/search?q=${Uri.encodeComponent(searchQuery)}&format=json&limit=30&addressdetails=1');
+
+    // OSM requires 1 second delay between requests
+    await Future.delayed(const Duration(milliseconds: 1100));
+
+    final response = await http.get(
+      url,
+      headers: {
+        'User-Agent': userAgent,
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> results = json.decode(response.body);
+
+      // Parse and filter OSM results
+      final venues = results
+          .map((place) => _parseOSMPlace(place, [query]))
+          .where((place) => place != null)
+          .where((place) => _isValidVenue(place!))
+          .cast<Map<String, dynamic>>()
+          .toList();
+
+      return venues;
+    } else {
+      throw Exception('Failed to load places: ${response.body}');
     }
   }
 
-  Map<String, dynamic>? _parsePlace(dynamic place, bool isFree, String dateCategory) {
-    final category = place['categories'].isNotEmpty ? place['categories'][0]['name'] : 'N/A';
-    if ((isFree && !_isLikelyFree(category)) || (!isFree && !_isPlaceSuitable(category, dateCategory))) {
+  /// Check if venue is a valid place (not a street, region, etc.)
+  bool _isValidVenue(Map<String, dynamic> place) {
+    final type = (place['category'] as String).toLowerCase();
+
+    // Filter out non-venue types
+    final invalidTypes = [
+      'administrative',
+      'boundary',
+      'highway',
+      'road',
+      'street',
+      'place',
+      'city',
+      'town',
+      'village',
+      'suburb',
+      'neighbourhood',
+      'region',
+      'state',
+      'country',
+    ];
+
+    return !invalidTypes.any((invalid) => type.contains(invalid));
+  }
+
+  /// Calculate relevance score for a venue
+  int _calculateRelevanceScore(
+    Map<String, dynamic> venue,
+    String suggestion,
+    List<String> venueTypes,
+    String dateCategory,
+  ) {
+    int score = 50; // Base score
+
+    final name = (venue['name'] as String).toLowerCase();
+    final category = (venue['category'] as String).toLowerCase();
+    final lowerSuggestion = suggestion.toLowerCase();
+
+    // Boost score if name matches suggestion keywords
+    final suggestionWords = lowerSuggestion.split(' ');
+    for (final word in suggestionWords) {
+      if (word.length > 3 && name.contains(word)) {
+        score += 15;
+      }
+    }
+
+    // Boost score if category matches venue types
+    for (final venueType in venueTypes) {
+      if (category.contains(venueType.toLowerCase())) {
+        score += 20;
+      }
+    }
+
+    // Boost specific venue types
+    if (category.contains('restaurant') ||
+        category.contains('cafe') ||
+        category.contains('bar')) {
+      score += 10; // Popular date venues
+    }
+
+    if (category.contains('museum') ||
+        category.contains('gallery') ||
+        category.contains('park')) {
+      score += 10; // Cultural and outdoor venues
+    }
+
+    // Penalty for generic names
+    if (name.length < 5 ||
+        name.contains('unnamed') ||
+        name.contains('untitled')) {
+      score -= 20;
+    }
+
+    return score.clamp(0, 100);
+  }
+
+  /// Parse OpenStreetMap place to match expected format
+  Map<String, dynamic>? _parseOSMPlace(
+      Map<String, dynamic> place, List<String> venueTypes) {
+    try {
+      final address = place['address'] as Map<String, dynamic>?;
+      final displayName = place['display_name'] as String?;
+
+      // Extract name from display name (first part before comma)
+      String name = displayName?.split(',').first ?? 'Unknown Place';
+
+      // Build readable address
+      String fullAddress = '';
+      if (address != null) {
+        final parts = <String>[];
+        if (address['house_number'] != null) parts.add(address['house_number']);
+        if (address['road'] != null) parts.add(address['road']);
+        if (address['city'] != null) parts.add(address['city']);
+        if (address['state'] != null) parts.add(address['state']);
+        fullAddress = parts.join(', ');
+      }
+      if (fullAddress.isEmpty)
+        fullAddress = displayName ?? 'Address unavailable';
+
+      // Extract OSM type and ID for proper lookup
+      final osmType = place['osm_type'] ?? 'node';
+      final osmId = place['osm_id']?.toString() ?? place['place_id'].toString();
+
+      return {
+        'id': place['place_id'].toString(),
+        'osm_type': osmType,
+        'osm_id': osmId,
+        'name': name,
+        'address': fullAddress,
+        'category': place['type'] ?? 'Place',
+        'price': '\$\$', // OSM doesn't provide price info
+        'lat': double.tryParse(place['lat']?.toString() ?? '0') ?? 0.0,
+        'lon': double.tryParse(place['lon']?.toString() ?? '0') ?? 0.0,
+        'score': 50, // Default score
+      };
+    } catch (e) {
+      print('Error parsing OSM place: $e');
       return null;
     }
-    return {
-      'id': place['fsq_id'],
-      'name': place['name'],
-      'address': place['location']['formatted_address'],
-      'category': category,
-      'price': place['price'] != null ? '\$' * place['price'] : 'N/A',
-    };
   }
 
-  Map<String, dynamic>? _parseSceniceOrWalkingPlace(dynamic place, String suggestion) {
-    final category = place['categories'].isNotEmpty ? place['categories'][0]['name'] : 'N/A';
-    if (!_isSceniceOrWalkingSuitable(category)) {
-      return null;
-    }
-    return {
-      'id': place['fsq_id'],
-      'name': place['name'],
-      'address': place['location']['formatted_address'],
-      'category': category,
-      'suggestion': suggestion,
-    };
-  }
-  bool _isLikelyFree(String category) {
-    List<String> freeCategories = [
-      'Park', 'Beach', 'Hiking Trail', 'Playground', 'Garden',
-      'Historic Site', 'Scenic Lookout', 'Monument', 'Plaza',
-      'Outdoor', 'Trail', 'Waterfront', 'Pedestrian Plaza'
-    ];
-    return freeCategories.any((freeCategory) =>
-        category.toLowerCase().contains(freeCategory.toLowerCase()));
-  }
+  Future<Map<String, dynamic>> getPlaceDetails(dynamic venueData) async {
+    // Extract OSM type and ID from venue object
+    String osmType = venueData['osm_type'] ?? 'node';
+    String osmId = venueData['osm_id'] ?? venueData['id'];
 
-  bool _isPlaceSuitable(String placeCategory, String dateCategory) {
-    Map<String, List<String>> suitableCategories = {
-      'standup_comedy': ['Comedy Club', 'Theater', 'Performing Arts Venue'],
-      'movie': ['Movie Theater', 'Cinema'],
-      'dinner': ['Restaurant', 'Bistro', 'Cafe', 'Diner'],
-      'outdoor_activity': ['Park', 'Hiking Trail', 'Beach', 'Garden', 'Outdoor'],
-      'cultural': ['Museum', 'Art Gallery', 'Historical Site'],
-      'adventure': ['Amusement Park', 'Sports Venue', 'Recreation Center'],
-      'relaxation': ['Spa', 'Wellness Center', 'Yoga Studio'],
-      'food_experience': ['Restaurant', 'Cooking School', 'Food Market']
-    };
+    // Determine type prefix (N=node, W=way, R=relation)
+    String typePrefix = osmType.toLowerCase().startsWith('n')
+        ? 'N'
+        : osmType.toLowerCase().startsWith('w')
+            ? 'W'
+            : 'R';
 
-    List<String> suitable = suitableCategories[dateCategory] ?? [];
-    return suitable.isEmpty || suitable.any((cat) => placeCategory.toLowerCase().contains(cat.toLowerCase()));
-  }
-
-  bool _isSceniceOrWalkingSuitable(String category) {
-    List<String> suitableCategories = [
-      'Park', 'Beach', 'Hiking Trail', 'Scenic Lookout', 'Garden',
-      'Nature Preserve', 'Mountain', 'Waterfront', 'Plaza', 'Pedestrian Plaza'
-    ];
-    return suitableCategories.any((suitable) =>
-        category.toLowerCase().contains(suitable.toLowerCase()));
-  }
-
-  String _getCategoriesForSuggestion(String suggestion, bool isFree, String dateCategory) {
-    Map<String, String> categoryMap = {
-      'standup_comedy': '10035,10024',
-      'movie': '10024',
-      'dinner': '13065',
-      'outdoor_activity': '16000',
-      'sports': '18000',
-      'adventure': '10000,18000',
-      'cultural': '10000,10027',
-      'relaxation': '14000',
-      'educational': '12000',
-      'nightlife': '10032',
-      'music': '10032,10028',
-      'gaming': '18021',
-      'water_activity': '16000,18000',
-      'fitness': '18000,14000',
-      'shopping': '17000',
-      'animal_related': '19000',
-      'adrenaline': '18000',
-      'romantic': '13065,10000',
-      'creative': '10000,12000',
-      'technology': '18021,12000',
-      'food_experience': '13000',
-      'dance': '10032,14000',
-      'spiritual': '12000',
-      'literary': '12000',
-      'seasonal': '10000',
-      'scenic': '16000',
-      'wellness': '14000',
-      'social_cause': '12000',
-      'transportation': '19000',
-      'mystery': '10000,18021',
-      'yoga': '14000',
-      'go_kart': '18000',
-      'hiking': '16000',
-      'cinema': '10024'
-    };
-
-    String categories = categoryMap[dateCategory] ?? '';
-    if (categories.isEmpty) {
-      categories = isFree ? '16000' : '13065,10024,10035,10027,18021,13037,17000,10001';
-    }
-    return '&categories=$categories';
-  }
-
-
-  Future<Map<String, dynamic>> getPlaceDetails(String placeId) async {
-    final url = Uri.parse('$baseUrl/$placeId?fields=fsq_id,name,description,location,categories,photos,hours,price,rating,stats,website,tel');
+    // OSM lookup by osm_type and osm_id
+    final url = Uri.parse(
+        '$baseUrl/lookup?osm_ids=$typePrefix$osmId&format=json&addressdetails=1&extratags=1');
 
     try {
+      // OSM requires 1 second delay between requests
+      await Future.delayed(const Duration(milliseconds: 1100));
+
       final response = await http.get(
         url,
         headers: {
-          'Authorization': _apiKey,
+          'User-Agent': userAgent,
           'Accept': 'application/json',
         },
       );
 
       if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return _parsePlaceDetails(data);
+        final List<dynamic> data = json.decode(response.body);
+        if (data.isNotEmpty) {
+          return _parsePlaceDetails(data[0]);
+        } else {
+          // Fallback to basic venue info if lookup fails
+          print('⚠️ OSM lookup failed, using basic venue data');
+          return _createBasicPlaceDetails(venueData);
+        }
       } else {
-        throw Exception('Failed to load place details: ${response.body}');
+        // Fallback to basic venue info on API error
+        print('⚠️ OSM API error, using basic venue data');
+        return _createBasicPlaceDetails(venueData);
       }
     } catch (e) {
-      print('Error in getPlaceDetails: $e');
-      rethrow;
+      print('Error in getPlaceDetails: $e, falling back to basic data');
+      return _createBasicPlaceDetails(venueData);
     }
   }
 
   Map<String, dynamic> _parsePlaceDetails(Map<String, dynamic> data) {
+    final extratags = data['extratags'] as Map<String, dynamic>?;
+    final displayName = data['display_name'] as String?;
+
+    String name = displayName?.split(',').first ?? 'Unknown Place';
+    String fullAddress = displayName ?? 'Address unavailable';
+
     return {
-      'id': data['fsq_id'],
-      'name': data['name'],
-      'description': data['description'] ?? 'No description available',
-      'address': data['location']['formatted_address'],
-      'category': data['categories'].isNotEmpty ? data['categories'][0]['name'] : 'N/A',
-      'photos': (data['photos'] as List<dynamic>?)?.map((photo) =>
-      '${photo['prefix']}original${photo['suffix']}'
-      ).toList() ?? [],
-      'price': data['price'] != null ? '\$' * data['price'] : 'N/A',
+      'id': data['place_id']?.toString() ?? data['fsq_id']?.toString() ?? '',
+      'name': data['name'] ?? name,
+      'description': extratags?['description'] ??
+          data['description'] ??
+          'No description available',
+      'address': fullAddress,
+      'category': data['type'] ?? data['category'] ?? 'Place',
+      'photos': <String>[], // OSM doesn't provide photos via API
+      'price': data['price'] != null ? '\$' * data['price'] : '\$\$',
       'rating': data['rating']?.toDouble() ?? 0.0,
-      'website': data['website'] ?? 'N/A',
-      'phone': data['tel'] ?? 'N/A',
+      'website': extratags?['website'] ??
+          extratags?['contact:website'] ??
+          data['website'] ??
+          'N/A',
+      'phone': extratags?['phone'] ??
+          extratags?['contact:phone'] ??
+          data['tel'] ??
+          'N/A',
+      'lat': double.tryParse(data['lat']?.toString() ?? '0') ?? 0.0,
+      'lon': double.tryParse(data['lon']?.toString() ?? '0') ?? 0.0,
+    };
+  }
+
+  /// Create basic place details from venue data when OSM lookup fails
+  Map<String, dynamic> _createBasicPlaceDetails(
+      Map<String, dynamic> venueData) {
+    return {
+      'id': venueData['id'] ?? '',
+      'name': venueData['name'] ?? 'Unknown Place',
+      'description': 'No description available',
+      'address': venueData['address'] ??
+          venueData['vicinity'] ??
+          'Address unavailable',
+      'category': venueData['category'] ?? 'Place',
+      'photos': <String>[],
+      'price': '\$\$',
+      'rating': 0.0,
+      'website': 'N/A',
+      'phone': 'N/A',
+      'lat': venueData['lat'] ?? 0.0,
+      'lon': venueData['lon'] ?? 0.0,
     };
   }
 }

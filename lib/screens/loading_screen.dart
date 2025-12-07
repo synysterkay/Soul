@@ -28,7 +28,7 @@ class _LoadingScreenState extends State<LoadingScreen> with SingleTickerProvider
   void initState() {
     super.initState();
     _initializeAnimation();
-    Future.delayed(Duration(seconds: 3), _changeMessage);
+    _initializeMessages();
   }
 
   void _initializeAnimation() {
@@ -37,6 +37,12 @@ class _LoadingScreenState extends State<LoadingScreen> with SingleTickerProvider
       vsync: this,
     )..repeat(reverse: true);
     _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  void _initializeMessages() {
+    if (mounted) {
+      Future.delayed(Duration(seconds: 3), _changeMessage);
+    }
   }
 
   List<String> _getMessages() {
@@ -48,11 +54,15 @@ class _LoadingScreenState extends State<LoadingScreen> with SingleTickerProvider
     ];
   }
 
-  void _changeMessage() {
+  Future<void> _changeMessage() async {
     if (mounted) {
       setState(() => _messageIndex = (_messageIndex + 1) % _messages.length);
       Future.delayed(Duration(seconds: 3), _changeMessage);
     }
+  }
+
+  void _handleBack() {
+    Navigator.pop(context);
   }
 
   @override
@@ -72,7 +82,7 @@ class _LoadingScreenState extends State<LoadingScreen> with SingleTickerProvider
         elevation: 0,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios, color: Color(0xFF2E2E2E)),
-          onPressed: () => Navigator.pop(context),
+          onPressed: _handleBack,
         ).animate().fadeIn(delay: 200.ms),
         title: Text(
           "Planning Your Perfect Date",

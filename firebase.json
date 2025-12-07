@@ -1,0 +1,40 @@
+{
+  "functions": {
+    "source": "functions",
+    "ignore": [
+      "node_modules",
+      ".git",
+      "firebase-debug.log",
+      "firebase-debug.*.log"
+    ]
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "soulplan-dateplanner",
+          "appId": "1:543297399935:android:a00c55db93fc9f975da34a",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "soulplan-dateplanner",
+          "appId": "1:543297399935:ios:74642b18481e4fa55da34a",
+          "uploadDebugSymbols": false,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "soulplan-dateplanner",
+          "configurations": {
+            "android": "1:543297399935:android:a00c55db93fc9f975da34a",
+            "ios": "1:543297399935:ios:74642b18481e4fa55da34a",
+            "web": "1:543297399935:web:911b9f15200cdbe95da34a"
+          }
+        }
+      }
+    }
+  }
+}

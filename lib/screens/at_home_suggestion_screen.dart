@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:soul_plan/services/gemini_service.dart';
+import 'package:soul_plan/services/deepseek_service.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'dart:ui';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -8,14 +8,15 @@ import 'package:flutter_animate/flutter_animate.dart';
 class AtHomeSuggestionScreen extends StatefulWidget {
   final String suggestion;
 
-  const AtHomeSuggestionScreen({Key? key, required this.suggestion}) : super(key: key);
+  const AtHomeSuggestionScreen({Key? key, required this.suggestion})
+      : super(key: key);
 
   @override
   _AtHomeSuggestionScreenState createState() => _AtHomeSuggestionScreenState();
 }
 
 class _AtHomeSuggestionScreenState extends State<AtHomeSuggestionScreen> {
-  final GeminiService _geminiService = GeminiService();
+  final DeepSeekService _deepseekService = DeepSeekService();
   String _advice = '';
   bool _isLoading = true;
 
@@ -27,7 +28,8 @@ class _AtHomeSuggestionScreenState extends State<AtHomeSuggestionScreen> {
 
   Future<void> _loadAdvice() async {
     try {
-      final advice = await _geminiService.getAtHomeDateAdvice(widget.suggestion, 'en');
+      final advice =
+          await _deepseekService.getAtHomeDateAdvice(widget.suggestion, 'en');
       setState(() {
         _advice = advice;
         _isLoading = false;

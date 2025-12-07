@@ -1,7 +1,7 @@
 name: soul_plan
 description: "AI Date Planner With Emotional Insight Concept"
 publish_to: 'none'
-version: 1.0.0+1
+version: 22.0.0+22
 
 environment:
   sdk: ^3.5.4
@@ -12,26 +12,55 @@ dependencies:
   cupertino_icons: ^1.0.8
   provider: ^6.1.1
   shared_preferences: ^2.2.2
-  flutter_dotenv: ^5.1.0
-  http: ^1.1.0
-  google_generative_ai: ^0.2.0
-  google_fonts: ^6.1.0
+  flutter_dotenv: ^6.0.0
+  http: ^1.6.0
+  google_fonts: ^6.3.2
   flutter_animate: ^4.5.0
   animated_text_kit: ^4.2.2
   flutter_image_slideshow: ^0.1.6
   url_launcher: ^6.2.2
   flutter_staggered_grid_view: ^0.7.0
-  flutter_markdown: ^0.6.18
-  intl: ^0.18.0  # For date/time formatting
+  flutter_markdown: ^0.7.7+1
+  intl: ^0.20.2  # For date/time formatting
   cached_network_image: ^3.3.0  # For efficient image loading
   shimmer: ^3.0.0  # For loading animations
-  connectivity_plus: ^5.0.2
+  connectivity_plus: ^7.0.0
+  google_mobile_ads: ^6.0.0
+  superwallkit_flutter: ^2.0.8
+  in_app_purchase: ^3.0.0
+  app_tracking_transparency: ^2.0.6+1
+  
+  # Firebase (Free tier)
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  cloud_firestore: ^6.1.0
+  firebase_storage: ^13.0.4
+  
+  # Push Notifications (Free tier)
+  onesignal_flutter: ^5.2.5
+  
+  # Authentication
+  google_sign_in: ^7.2.0
+  
+  # Phone & Contacts
+  phone_number: ^2.1.0
+  flutter_contacts: ^1.1.9+2
+  permission_handler: ^12.0.1
+  
+  # Location Services (using Foursquare)
+  geolocator: ^14.0.2
+  geocoding: ^4.0.0
+  
+  # Additional utilities
+  uuid: ^4.5.1
+  image_picker: ^1.1.2
+  firebase_app_check: ^0.4.1+2
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
@@ -41,3 +70,4 @@ flutter:
     - assets/icons/
     - assets/animations/
     - assets/images/
+    - images/

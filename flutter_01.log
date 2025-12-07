@@ -1,0 +1,75 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter analyze --no-fatal-infos
+
+## exception
+
+_Exception: Exception: analysis server exited with code 64 and output:
+[stderr] Project
+[stderr]   build       Build a Dart application including code assets.
+[stderr]   compile     Compile Dart to various formats.
+[stderr]   create      Create a new Dart project.
+[stderr]   pub         Work with packages.
+[stderr]   run         Run a Dart program.
+[stderr]   test        Run tests for a project.
+[stderr] 
+[stderr] Source code
+[stderr]   analyze     Analyze Dart code in a directory.
+[stderr]   doc         Generate API documentation for Dart projects.
+[stderr]   fix         Apply automated fixes to Dart source code.
+[stderr]   format      Idiomatically format Dart source code.
+[stderr] 
+[stderr] Tools
+[stderr]   devtools    Open DevTools (optionally connecting to an existing application).
+[stderr]   info        Show diagnostic information about the installed tooling.
+[stderr] 
+[stderr] Run "dart help <command>" for more information about a command.
+[stderr] See https://dart.dev/tools/dart-tool for detailed documentation.
+
+```
+```
+
+## flutter doctor
+
+```
+[✓] Flutter (Channel beta, 3.39.0-0.1.pre, on macOS 15.6.1 24G90 darwin-arm64, locale en-PL) [490ms]
+    • Flutter version 3.39.0-0.1.pre on channel beta at /Users/macbookair/flutter
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision cbb46938ee (3 weeks ago), 2025-11-10 17:13:11 -0600
+    • Engine revision b9afb03275
+    • Dart version 3.11.0 (build 3.11.0-93.1.beta)
+    • DevTools version 2.52.0
+    • Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, omit-legacy-version-file, enable-lldb-debugging
+
+[!] Android toolchain - develop for Android devices (Android SDK version 36.1.0) [905ms]
+    • Android SDK at /Users/macbookair/Library/Android/sdk
+    • Emulator version 36.2.12.0 (build_id 14214601) (CL:N/A)
+    ✗ cmdline-tools component is missing.
+      Try installing or updating Android Studio.
+      Alternatively, download the tools from https://developer.android.com/studio#command-line-tools-only and make sure to set the ANDROID_HOME environment variable.
+      See https://developer.android.com/studio/command-line for more details.
+    ✗ Android license status unknown.
+      Run `flutter doctor --android-licenses` to accept the SDK licenses.
+      See https://flutter.dev/to/macos-android-setup for more details.
+
+[✓] Xcode - develop for iOS and macOS (Xcode 26.1.1) [1,189ms]
+    • Xcode at /Applications/Xcode.app/Contents/Developer
+    • Build 17B100
+    • CocoaPods version 1.16.2
+
+[✓] Chrome - develop for the web [5ms]
+    • Chrome at /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+
+[✓] Connected device (3 available) [6.7s]
+    • iPhone (wireless) (mobile) • 00008101-001024823C85001E • ios            • iOS 18.6.2 22G100
+    • macOS (desktop)            • macos                     • darwin-arm64   • macOS 15.6.1 24G90 darwin-arm64
+    • Chrome (web)               • chrome                    • web-javascript • Google Chrome 142.0.7444.176
+
+[✓] Network resources [425ms]
+    • All expected network resources are available.
+
+! Doctor found issues in 1 category.
+```

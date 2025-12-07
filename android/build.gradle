@@ -1,3 +1,35 @@
+buildscript {
+    ext {
+        agp_version = '8.3.0'
+        kotlin_version = '1.8.21' // Add Kotlin version if using Kotlin
+        targetSdkVersion = 35
+        minSdkVersion = 26
+        compileSdkVersion = 35
+        buildToolsVersion = '36.0.0' // Use a consistent Build Tools version
+        ndkVersion = '26.2.11394342'
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$agp_version"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version" // Add if using Kotlin
+        classpath 'com.google.gms:google-services:4.3.15' // Add if using Firebase
+    }
+}
+
+ext {
+    defaultApplicationId = 'com.aifun.dateideas.planadate'
+    defaultTargetSdkVersion = targetSdkVersion
+    defaultMinSdkVersion = minSdkVersion
+    defaultCompileSdkVersion = compileSdkVersion
+    defaultBuildToolsVersion = buildToolsVersion
+    defaultNdkVersion = ndkVersion
+    compileSdkVersion = 35
+    ndkVersion = '25.1.8937393'
+}
+
 allprojects {
     repositories {
         google()
@@ -8,8 +40,6 @@ allprojects {
 rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-}
-subprojects {
     project.evaluationDependsOn(":app")
 }
 

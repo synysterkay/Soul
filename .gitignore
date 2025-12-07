@@ -33,9 +33,25 @@ android/.idea/
 android/app/debug
 android/app/profile
 android/app/release
+android/app/.cxx
+android/._*
+android/**/._*
 
 # IDE
 .idea/
 .vscode/
 *.iml
 .DS_Store
+
+# Sensitive files - DO NOT COMMIT
+.env
+*.p8
+AuthKey_*.p8
+SubscriptionKey_*.p8
+google-services.json
+GoogleService-Info.plist
+
+# Firebase
+firebase-debug.log
+.firebase/
+flutter/
