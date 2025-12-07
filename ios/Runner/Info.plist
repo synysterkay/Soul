@@ -55,6 +55,9 @@
     <key>NSLocationWhenInUseUsageDescription</key>
     <string>We need your location to suggest nearby date venues and activities in your area.</string>
     
+    <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+    <string>We need your location to suggest nearby date venues and activities, even when the app is in the background.</string>
+    
     <key>NSContactsUsageDescription</key>
     <string>We need access to your contacts to help you find and connect with your partner in the app.</string>
     
